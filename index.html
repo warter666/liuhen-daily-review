@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>留痕计划 · 每日总结复盘</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --text: #1d1d1f;
+    --text-2: #6e6e73;
+    --text-3: #a1a1a6;
+    --blue: #0071e3;
+    --blue-hover: #0077ed;
+    --line: rgba(0, 0, 0, .08);
+    --radius: 18px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(0, 113, 227, .15); }
+
+  /* ── 导航 ─────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: rgba(245, 245, 247, .72);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 980px; margin: 0 auto; padding: 0 22px;
+    height: 48px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-size: 17px; font-weight: 600; letter-spacing: .02em; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a { font-size: 12px; color: var(--text-2); text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  @media (max-width: 640px) { .nav-links { display: none; } }
+
+  /* ── Hero ─────────────────────── */
+  .hero {
+    max-width: 980px; margin: 0 auto; padding: 160px 22px 90px;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    font-size: 17px; color: var(--blue); font-weight: 500; margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(48px, 8vw, 88px);
+    font-weight: 700; letter-spacing: -.015em; line-height: 1.05;
+    background: linear-gradient(180deg, #1d1d1f 0%, #6e6e73 130%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero p.sub {
+    max-width: 560px; margin: 22px auto 0;
+    font-size: clamp(17px, 2.4vw, 21px); color: var(--text-2); font-weight: 400;
+  }
+  .hero .today {
+    margin-top: 28px; display: inline-block;
+    font-size: 14px; color: var(--text-2);
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 20px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .04);
+  }
+  .hero .cta-row { margin-top: 36px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 26px; border-radius: 999px;
+    font-size: 15px; text-decoration: none; cursor: pointer; border: none;
+    transition: all .2s; font-family: inherit;
+  }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:hover { background: var(--blue-hover); }
+  .btn-ghost { background: transparent; color: var(--blue); border: 1px solid var(--blue); }
+  .btn-ghost:hover { background: rgba(0, 113, 227, .06); }
+
+  /* ── 流式分节 ─────────────────── */
+  section { max-width: 980px; margin: 0 auto; padding: 70px 22px; }
+  .section-title { font-size: clamp(32px, 5vw, 48px); font-weight: 700; letter-spacing: -.01em; }
+  .section-sub { font-size: 17px; color: var(--text-2); margin-top: 10px; }
+  section > .section-title, section > .section-sub, .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  section > .section-title, section > .section-sub { display: block; }
+  .visible { opacity: 1; transform: none; }
+  .divider { border: none; border-top: 1px solid var(--line); max-width: 980px; margin: 0 auto; }
+
+  /* ── 复盘表单 ─────────────────── */
+  .form-card {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 40px; margin-top: 44px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+  }
+  .field { margin-bottom: 30px; }
+  .field label { display: block; font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .field .hint { font-weight: 400; color: var(--text-3); font-size: 13px; margin-left: 8px; }
+  .field textarea, .field input {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--bg); padding: 14px 16px; font-size: 15px;
+    font-family: inherit; color: var(--text); resize: vertical;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field textarea:focus, .field input:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, .12);
+  }
+  .field textarea { min-height: 90px; }
+  .mood-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .mood-btn {
+    flex: 1; min-width: 90px; padding: 12px 8px; text-align: center;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--bg);
+    font-size: 14px; color: var(--text-2); cursor: pointer;
+    font-family: inherit; transition: all .2s;
+  }
+  .mood-btn .emoji { display: block; font-size: 24px; margin-bottom: 2px; }
+  .mood-btn:hover { border-color: var(--blue); }
+  .mood-btn.active { border-color: var(--blue); background: rgba(0, 113, 227, .08); color: var(--blue); font-weight: 600; }
+  .form-foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .form-foot .note { font-size: 13px; color: var(--text-3); }
+  .save-msg { font-size: 13px; color: #34c759; opacity: 0; transition: opacity .4s; }
+  .save-msg.show { opacity: 1; }
+
+  /* ── 数据统计 ─────────────────── */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 44px;
+  }
+  @media (max-width: 720px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card {
+    background: var(--surface); border-radius: var(--radius); padding: 28px 24px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+  }
+  .stat-card .num { font-size: 40px; font-weight: 700; letter-spacing: -.02em; }
+  .stat-card .label { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+
+  /* ── 时间线 ───────────────────── */
+  .timeline { margin-top: 44px; display: flex; flex-direction: column; gap: 20px; }
+  .entry {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 30px 34px; box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+    animation: none;
+  }
+  .entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .entry-date { font-size: 19px; font-weight: 650; letter-spacing: -.01em; }
+  .entry-meta { display: flex; gap: 10px; align-items: center; }
+  .badge {
+    font-size: 12px; padding: 3px 12px; border-radius: 999px;
+    background: rgba(0, 113, 227, .1); color: var(--blue); font-weight: 500;
+  }
+  .entry-body { margin-top: 16px; display: grid; gap: 12px; }
+  .entry-item .k { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+  .entry-item .v { font-size: 14.5px; color: var(--text); white-space: pre-wrap; margin-top: 2px; }
+  .entry-actions { margin-top: 18px; display: flex; gap: 14px; }
+  .entry-actions button {
+    background: none; border: none; font-size: 13px; color: var(--blue);
+    cursor: pointer; font-family: inherit; padding: 0;
+  }
+  .entry-actions button:hover { text-decoration: underline; }
+  .empty {
+    text-align: center; color: var(--text-3); font-size: 15px;
+    padding: 60px 0; display: none;
+  }
+
+  footer {
+    text-align: center; padding: 50px 22px 70px;
+    font-size: 12px; color: var(--text-3);
+  }
+  footer .top-link { color: var(--blue); text-decoration: none; font-size: 13px; }
+  footer .top-link:hover { text-decoration: underline; }
+
+  /* ── 小跟班 · 幽影 ─────────────── */
+  #buddy {
+    position: fixed; left: 0; top: 0; z-index: 9999;
+    width: 64px; height: 64px; pointer-events: none;
+    will-change: transform;
+    filter: drop-shadow(0 0 8px rgba(80, 120, 255, .35));
+  }
+  #buddy .flip { transition: transform .15s ease-out; }
+  #buddy .bob { animation: bob .6s ease-in-out infinite alternate; }
+  #buddy.running .bob { animation-duration: .16s; }
+  #buddy .cloak { transform-origin: 32px 40px; animation: flutter 1s ease-in-out infinite alternate; }
+  #buddy.running .cloak { animation-duration: .22s; }
+  #buddy .glow { animation: glowPulse 2.4s ease-in-out infinite; }
+  @media (hover: none) { #buddy { display: none; } }
+  @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+  @keyframes flutter { from { transform: skewX(-4deg) scaleY(1); } to { transform: skewX(4deg) scaleY(1.06); } }
+  @keyframes glowPulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+  /* ── 靶场机器人 ────────────────── */
+  #bot {
+    position: fixed; left: 0; top: 0; width: 56px; height: 72px; z-index: 9000;
+    cursor: crosshair; will-change: transform;
+    transform: translate(-100px, -100px);
+  }
+  #bot svg { animation: botIn .25s cubic-bezier(.34,1.56,.64,1); transition: filter .15s; }
+  #bot:hover svg { filter: brightness(1.25); }
+  #bot.dead { pointer-events: none; }
+  #bot.dead svg { animation: botDie .3s ease-out forwards; }
+  @keyframes botIn { from { transform: scale(0) translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes botDie {
+    35% { transform: scale(1.3); filter: brightness(3); }
+    100% { transform: scale(.1) rotate(28deg); opacity: 0; }
+  }
+  .bot-pop {
+    position: fixed; z-index: 9001; pointer-events: none;
+    font-size: 13px; font-weight: 700; color: var(--blue);
+    white-space: nowrap;
+    text-shadow: 0 1px 5px rgba(255, 255, 255, .9);
+    animation: popUp .8s ease-out forwards;
+  }
+  @keyframes popUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-30px); opacity: 0; } }
+
+  /* ── 靶场 HUD ─────────────────── */
+  #rangeHud {
+    position: fixed; left: 16px; bottom: 16px; z-index: 9000;
+    background: rgba(255, 255, 255, .82);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 10px 16px; font-size: 12px; color: var(--text-2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+    line-height: 1.9; user-select: none;
+  }
+  #rangeHud b { color: var(--text); font-size: 13px; }
+  #rangeHud .live { color: var(--blue); font-weight: 700; }
+</style>
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#top">留痕计划</a>
+    <div class="nav-links">
+      <a href="#review">今日复盘</a>
+      <a href="#stats">数据</a>
+      <a href="#timeline">留痕时间线</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="eyebrow">留痕计划</div>
+  <h1>每一天，<br>都值得被记录。</h1>
+  <p class="sub">写下今天做了什么、收获了什么、明天去哪里。留痕，是为了让成长看得见。</p>
+  <div class="today" id="todayBadge">今天是 ——</div>
+  <div class="cta-row">
+    <a href="#review" class="btn btn-primary">开始今日复盘</a>
+    <a href="#timeline" class="btn btn-ghost">查看留痕</a>
+  </div>
+</header>
+
+<hr class="divider">
+
+<!-- ── 今日复盘 ── -->
+<section id="review">
+  <span class="section-title">今日复盘</span>
+  <span class="section-sub">四个问题，五分钟，把一天存进时间线。</span>
+
+  <div class="form-card reveal">
+    <div class="field">
+      <label>今日状态 <span class="hint">此刻的感受</span></label>
+      <div class="mood-row" id="moodRow">
+        <button type="button" class="mood-btn" data-mood="1"><span class="emoji">😣</span>有点难</button>
+        <button type="button" class="mood-btn" data-mood="2"><span class="emoji">😐</span>还行</button>
+        <button type="button" class="mood-btn" data-mood="3"><span class="emoji">🙂</span>不错</button>
+        <button type="button" class="mood-btn" data-mood="4"><span class="emoji">🚀</span>充满电</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>✅ 今天完成了什么</label>
+      <textarea id="fDone" placeholder="列 2–3 件最有价值的事…"></textarea>
+    </div>
+    <div class="field">
+      <label>💡 收获与思考</label>
+      <textarea id="fThink" placeholder="今天学到了什么？有什么新的想法？"></textarea>
+    </div>
+    <div class="field">
+      <label>🔍 问题与改进</label>
+      <textarea id="fFix" placeholder="哪里卡住了？明天怎么调整？"></textarea>
+    </div>
+    <div class="field">
+      <label>🌙 明日三件事</label>
+      <textarea id="fNext" placeholder="给明天定下最重要的三件事…"></textarea>
+    </div>
+    <div class="form-foot">
+      <span class="note">数据仅保存在本机浏览器，可随时导出。</span>
+      <span class="save-msg" id="saveMsg">已留痕 ✓</span>
+      <button class="btn btn-primary" id="saveBtn">留痕今天</button>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── 数据 ── -->
+<section id="stats">
+  <span class="section-title">你的留痕</span>
+  <span class="section-sub">坚持，是看得见的数字。</span>
+  <div class="stats-grid reveal">
+    <div class="stat-card"><div class="num" id="stTotal">0</div><div class="label">累计留痕</div></div>
+    <div class="stat-card"><div class="num" id="stStreak">0</div><div class="label">连续天数</div></div>
+    <div class="stat-card"><div class="num" id="stWeek">0</div><div class="label">本周留痕</div></div>
+    <div class="stat-card"><div class="num" id="stMood">—</div><div class="label">近期状态</div></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── 时间线 ── -->
+<section id="timeline">
+  <span class="section-title">留痕时间线</span>
+  <span class="section-sub">每一条痕迹，都是过去的自己写给现在的一封信。</span>
+
+  <div class="timeline reveal" id="timelineList"></div>
+  <div class="empty" id="emptyHint">还没有留痕记录，写下第一条吧。</div>
+
+  <div style="margin-top:40px; display:flex; gap:14px; flex-wrap:wrap;">
+    <button class="btn btn-ghost" id="exportBtn">导出 JSON</button>
+    <button class="btn btn-ghost" id="exportMdBtn">导出 Markdown</button>
+    <button class="btn btn-ghost" id="importBtn">导入</button>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+  </div>
+</section>
+
+<footer>
+  <a class="top-link" href="#top">回到顶部 ↑</a>
+  <br><br>
+  留痕计划 · 每日总结复盘 &nbsp;|&nbsp; 记录于本地，与你同行
+</footer>
+
+<!-- 靶场机器人：两侧随机刷新，点击命中 -->
+<div id="bot" aria-hidden="true">
+  <svg width="56" height="72" viewBox="0 0 56 72">
+    <defs>
+      <filter id="botGlow" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur stdDeviation="1.6" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <ellipse cx="28" cy="67" rx="12" ry="3" fill="rgba(0,0,0,.15)"/>
+    <ellipse cx="12" cy="45" rx="3.5" ry="7" fill="#2b2f63"/>
+    <ellipse cx="44" cy="45" rx="3.5" ry="7" fill="#2b2f63"/>
+    <path d="M17 40 C17 31 21 27 28 27 C35 27 39 31 39 40 L37.5 58 C33 62 23 62 18.5 58 Z"
+          fill="#2e3272" stroke="#545aa8" stroke-width="1.2"/>
+    <circle cx="28" cy="40" r="3" fill="#7df3ff" opacity=".85" filter="url(#botGlow)"/>
+    <line x1="28" y1="6" x2="28" y2="1.5" stroke="#545aa8" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="28" cy="1.5" r="2" fill="#7df3ff" opacity=".9" filter="url(#botGlow)"/>
+    <rect x="12" y="6" width="32" height="26" rx="10" fill="#232650" stroke="#545aa8" stroke-width="1.2"/>
+    <rect x="17" y="13.5" width="22" height="9" rx="4.5" fill="#0e1030"/>
+    <circle cx="24" cy="18" r="2.6" fill="#7df3ff" filter="url(#botGlow)"/>
+    <circle cx="33" cy="18" r="2.6" fill="#7df3ff" filter="url(#botGlow)"/>
+  </svg>
+</div>
+
+<!-- 靶场 HUD -->
+<div id="rangeHud">
+  <b>🎯 靶场反应</b><br>
+  击中 <b id="rHits">0</b> · 用时 <b id="rTime">0:00</b> · 目标存活 <span class="live" id="rLive">—</span><br>
+  上次 <b id="rLast">—</b> · 平均 <b id="rAvg">—</b> · 最快 <b id="rBest">—</b>
+</div>
+
+<!-- 小跟班 · 幽影大头：沿鼠标轨迹延迟 0.3s 跟随 -->
+<div id="buddy" aria-hidden="true">
+  <svg width="64" height="64" viewBox="0 0 64 64">
+    <defs>
+      <filter id="omenGlow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="1.8" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <g class="flip">
+      <g class="bob">
+        <!-- 破碎斗篷 -->
+        <g class="cloak">
+          <path d="M22 40 L21 56 L25 51 L28 58 L32 52 L36 58 L39 51 L43 56 L42 40 Z"
+                fill="#232650" stroke="#4a4f9e" stroke-width="1"/>
+        </g>
+        <!-- 漂浮小手 -->
+        <ellipse cx="15" cy="42" rx="3" ry="4.5" fill="#2b2f63"/>
+        <ellipse cx="49" cy="42" rx="3" ry="4.5" fill="#2b2f63"/>
+        <!-- 大头兜帽 -->
+        <path d="M32 6 C18 6 11 17 12 30 C12.5 40 20 46 32 46 C44 46 51.5 40 52 30 C53 17 46 6 32 6 Z"
+              fill="#2e3272" stroke="#545aa8" stroke-width="1.2"/>
+        <path d="M32 6 L30 0 M32 6 L36 1" stroke="#545aa8" stroke-width="1.6" stroke-linecap="round"/>
+        <!-- 兜帽阴影脸部 -->
+        <ellipse cx="32" cy="28" rx="11.5" ry="10" fill="#0e1030"/>
+        <!-- 发光双眼 -->
+        <g class="glow" filter="url(#omenGlow)">
+          <path d="M25 26 q3 -2.4 6 0 q-3 2.2 -6 0 Z" fill="#7df3ff"/>
+          <path d="M36 26 q3 -2.4 6 0 q-3 2.2 -6 0 Z" fill="#7df3ff"/>
+        </g>
+        <!-- 兜帽纹理 -->
+        <path d="M20 14 q12 -6 24 0" stroke="#454a95" stroke-width="1.2" fill="none" opacity=".7"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<script>
+(function () {
+  const KEY = 'liuhen.entries';
+  const $ = id => document.getElementById(id);
+
+  const todayStr = () => {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  };
+  const weekOf = () => {
+    const d = new Date(todayStr());
+    const day = (d.getDay() + 6) % 7; // 周一为 0
+    d.setDate(d.getDate() - day);
+    const e = new Date(d);
+    e.setDate(e.getDate() + 6);
+    return [d, e];
+  };
+  const fmt = s => {
+    const d = new Date(s);
+    const wd = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+    const m = d.getMonth() + 1;
+    return `${m} 月 ${d.getDate()} 日 · 周${wd}`;
+  };
+
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
+  const save = list => localStorage.setItem(KEY, JSON.stringify(list));
+
+  /* 顶部日期 */
+  $('todayBadge').textContent = '今天是 ' + fmt(todayStr());
+
+  /* 心情选择 */
+  let mood = 0;
+  $('moodRow').addEventListener('click', e => {
+    const btn = e.target.closest('.mood-btn');
+    if (!btn) return;
+    mood = +btn.dataset.mood;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('active', b === btn));
+  });
+
+  /* 滚动渐显 */
+  const io = new IntersectionObserver(es => es.forEach(en => {
+    if (en.isIntersecting) { en.target.classList.add('visible'); io.unobserve(en.target); }
+  }), { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  document.querySelectorAll('section > .section-title, section > .section-sub').forEach(el => io.observe(el));
+
+  /* 保存 */
+  $('saveBtn').addEventListener('click', () => {
+    const entry = {
+      date: todayStr(),
+      mood,
+      done: $('fDone').value.trim(),
+      think: $('fThink').value.trim(),
+      fix: $('fFix').value.trim(),
+      next: $('fNext').value.trim(),
+      ts: Date.now()
+    };
+    if (!entry.done && !entry.think && !entry.fix && !entry.next) { alert('至少写一点今天的痕迹吧 🙂'); return; }
+    const list = load().filter(e => e.date !== entry.date);
+    list.push(entry);
+    save(list);
+    render();
+
+    const msg = $('saveMsg');
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 1800);
+    $('fDone').value = $('fThink').value = $('fFix').value = $('fNext').value = '';
+    mood = 0;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  });
+
+  /* 删除 / 编辑 */
+  $('timelineList').addEventListener('click', e => {
+    const del = e.target.closest('[data-del]');
+    if (del) {
+      if (confirm('删除这条留痕？')) {
+        save(load().filter(x => x.date !== del.dataset.del));
+        render();
+      }
+      return;
+    }
+    const edit = e.target.closest('[data-edit]');
+    if (edit) {
+      const en = load().find(x => x.date === edit.dataset.edit);
+      if (!en) return;
+      if (en.date !== todayStr() && !confirm('这是 ' + en.date + ' 的记录，将以今天的名义覆盖，继续？')) return;
+      mood = en.mood || 0;
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('active', +b.dataset.mood === mood));
+      $('fDone').value = en.done || '';
+      $('fThink').value = en.think || '';
+      $('fFix').value = en.fix || '';
+      $('fNext').value = en.next || '';
+      document.getElementById('review').scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  /* 导出 / 导入 */
+  const download = (name, content, type) => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  $('exportBtn').addEventListener('click', () =>
+    download('留痕计划-' + todayStr() + '.json', JSON.stringify(load(), null, 2), 'application/json'));
+  $('exportMdBtn').addEventListener('click', () => {
+    const lines = ['# 留痕计划 · 总结复盘\n'];
+    [...load()].reverse().forEach(en => {
+      lines.push('## ' + en.date + '\n');
+      if (en.done) lines.push('**✅ 完成了**\n\n' + en.done + '\n');
+      if (en.think) lines.push('**💡 收获与思考**\n\n' + en.think + '\n');
+      if (en.fix) lines.push('**🔍 问题与改进**\n\n' + en.fix + '\n');
+      if (en.next) lines.push('**🌙 明日计划**\n\n' + en.next + '\n');
+      lines.push('---\n');
+    });
+    download('留痕计划-' + todayStr() + '.md', lines.join('\n'), 'text/markdown');
+  });
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const arr = JSON.parse(r.result);
+        if (!Array.isArray(arr)) throw 0;
+        const map = {};
+        load().forEach(x => map[x.date] = x);
+        arr.forEach(x => { if (x && x.date) map[x.date] = x; });
+        save(Object.values(map).sort((a, b) => a.date < b.date ? -1 : 1));
+        render();
+        alert('导入成功 ✓');
+      } catch (err) { alert('文件格式不正确'); }
+    };
+    r.readAsText(file);
+    e.target.value = '';
+  });
+
+  const moodFace = ['—', '😣', '😐', '🙂', '🚀'];
+
+  function render() {
+    const list = load().sort((a, b) => b.date < a.date ? -1 : 1);
+    const box = $('timelineList');
+    $('emptyHint').style.display = list.length ? 'none' : 'block';
+
+    box.innerHTML = list.map(en => `
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-date">${fmt(en.date)}</span>
+          <span class="entry-meta">
+            ${en.mood ? `<span class="badge" style="background:none;font-size:20px;">${moodFace[en.mood]}</span>` : ''}
+            <span class="badge">${en.date}</span>
+          </span>
+        </div>
+        <div class="entry-body">
+          ${en.done ? `<div class="entry-item"><div class="k">✅ 完成了</div><div class="v">${esc(en.done)}</div></div>` : ''}
+          ${en.think ? `<div class="entry-item"><div class="k">💡 收获与思考</div><div class="v">${esc(en.think)}</div></div>` : ''}
+          ${en.fix ? `<div class="entry-item"><div class="k">🔍 问题与改进</div><div class="v">${esc(en.fix)}</div></div>` : ''}
+          ${en.next ? `<div class="entry-item"><div class="k">🌙 明日计划</div><div class="v">${esc(en.next)}</div></div>` : ''}
+        </div>
+        <div class="entry-actions">
+          <button data-edit="${en.date}">编辑</button>
+          <button data-del="${en.date}">删除</button>
+        </div>
+      </div>`).join('');
+
+    /* 统计 */
+    $('stTotal').textContent = list.length;
+    /* 连续天数：从今天/昨天开始向前数 */
+    const dates = new Set(list.map(x => x.date));
+    let streak = 0;
+    const cur = new Date(todayStr());
+    if (!dates.has(todayStr())) cur.setDate(cur.getDate() - 1);
+    const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    while (dates.has(iso(cur))) { streak++; cur.setDate(cur.getDate() - 1); }
+    $('stStreak').textContent = streak;
+    /* 本周 */
+    const [ws, we] = weekOf();
+    $('stWeek').textContent = list.filter(x => x.date >= iso(ws) && x.date <= iso(we)).length;
+    /* 近期状态 */
+    const recent = list.slice(0, 7).map(x => x.mood).filter(Boolean);
+    const avg = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+    $('stMood').textContent = recent.length ? moodFace[Math.round(avg)] : '—';
+  }
+
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  render();
+})();
+
+/* ── 小跟班：回放 0.3s 前的鼠标轨迹 ── */
+(function () {
+  const DELAY = 300;
+  const buddy = document.getElementById('buddy');
+  const flip = buddy.querySelector('.flip');
+  const svg = buddy.querySelector('svg');
+  const trail = [];
+  let px = null, py = null, face = 1;
+  let last = { x: innerWidth / 2, y: innerHeight / 2 };
+
+  window.addEventListener('mousemove', e => {
+    trail.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+    if (trail.length > 400) trail.shift();
+  });
+
+  function frame() {
+    const now = performance.now();
+    while (trail.length > 2 && trail[1].t < now - DELAY - 120) trail.shift();
+
+    let x = null, y = null;
+    if (trail.length) {
+      const targetT = now - DELAY;
+      const last = trail[trail.length - 1];
+      if (last.t <= targetT) {
+        x = last.x; y = last.y;
+      } else {
+        for (let i = trail.length - 1; i > 0; i--) {
+          const a = trail[i - 1], b = trail[i];
+          if (a.t <= targetT) {
+            const k = (targetT - a.t) / ((b.t - a.t) || 1);
+            x = a.x + (b.x - a.x) * k;
+            y = a.y + (b.y - a.y) * k;
+            break;
+          }
+        }
+      }
+    }
+
+    if (x !== null) last = { x, y };
+    const dx = px === null ? 0 : last.x - px, dy = py === null ? 0 : last.y - py;
+    const speed = Math.hypot(dx, dy);
+    if (dx > 0.4) face = 1; else if (dx < -0.4) face = -1;
+    const tilt = Math.max(-16, Math.min(16, dx * 1.4));
+    buddy.style.transform = `translate(${last.x - 32}px, ${last.y - 58}px)`;
+    flip.style.transform = `scaleX(${face})`;
+    svg.style.transform = `rotate(${face * tilt}deg)`;
+    buddy.classList.toggle('running', speed > 1.2);
+    px = last.x; py = last.y;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ── 靶场：两侧随机刷机器人，点击命中测反应 ── */
+(function () {
+  const $ = id => document.getElementById(id);
+  const bot = $('bot');
+  const KEY = 'liuhen.range';
+  const today = new Date().toISOString().slice(0, 10);
+  let st = { date: today, hits: 0, total: 0, count: 0, best: null, start: Date.now() };
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && s.date === today) { st.hits = s.hits; st.total = s.total; st.count = s.count; st.best = s.best; }
+  } catch (e) {}
+  const persist = () => localStorage.setItem(KEY, JSON.stringify({
+    date: st.date, hits: st.hits, total: st.total, count: st.count, best: st.best
+  }));
+
+  let spawnT = 0, liveTimer = null;
+
+  function updHud() {
+    $('rHits').textContent = st.hits;
+    $('rAvg').textContent = st.count ? Math.round(st.total / st.count) + ' ms' : '—';
+    $('rBest').textContent = st.best != null ? Math.round(st.best) + ' ms' : '—';
+  }
+
+  function spawn() {
+    const vw = innerWidth, vh = innerHeight;
+    const x = Math.random() < .5 ? vw * (.05 + Math.random() * .13) : vw * (.82 + Math.random() * .13);
+    const y = vh * (.18 + Math.random() * .58);
+    bot.style.transform = `translate(${x - 28}px, ${y - 36}px)`;
+    bot.classList.remove('dead');
+    spawnT = performance.now();
+    clearInterval(liveTimer);
+    liveTimer = setInterval(() => {
+      $('rLive').textContent = ((performance.now() - spawnT) / 1000).toFixed(1) + ' s';
+    }, 100);
+  }
+
+  bot.addEventListener('click', () => {
+    if (bot.classList.contains('dead')) return;
+    const rt = performance.now() - spawnT;
+    st.hits++; st.total += rt; st.count++;
+    st.best = st.best == null ? rt : Math.min(st.best, rt);
+    persist(); updHud();
+    $('rLast').textContent = Math.round(rt) + ' ms';
+    $('rLive').textContent = '—';
+    clearInterval(liveTimer);
+
+    const r = bot.getBoundingClientRect();
+    const p = document.createElement('div');
+    p.className = 'bot-pop';
+    p.textContent = '命中！' + Math.round(rt) + ' ms';
+    p.style.left = (r.left + r.width / 2 - 34) + 'px';
+    p.style.top = (r.top - 8) + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+
+    bot.classList.add('dead');
+    setTimeout(spawn, 600 + Math.random() * 2400);
+  });
+
+  setInterval(() => {
+    const s = Math.floor((Date.now() - st.start) / 1000);
+    $('rTime').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }, 1000);
+
+  updHud();
+  spawn();
+})();
+</script>
+</body>
+</html>
